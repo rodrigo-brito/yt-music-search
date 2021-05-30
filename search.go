@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type Payload struct {
@@ -15,9 +16,9 @@ type Payload struct {
 }
 
 const (
-	userAgent  = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
-	defaultKey = "AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30" // public key from youtube music
-	api        = "https://music.youtube.com/youtubei/v1/search"
+	userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+	publicKey = "AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30" // public key from youtube music (it is not a leak)
+	api       = "https://music.youtube.com/youtubei/v1/search"
 )
 
 type Client struct {
@@ -46,7 +47,7 @@ func Search(query string) {
 		},
 	})
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s?alt=json&key=%s", api, defaultKey), bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s?alt=json&key=%s", api, publicKey), bytes.NewBuffer(data))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("origin", "https://music.youtube.com")
 	req.Header.Set("referer", "https://music.youtube.com")
@@ -55,7 +56,9 @@ func Search(query string) {
 	req.Header.Set("x-goog-authuser", "0")
 	req.Header.Set("user-agent", userAgent)
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
